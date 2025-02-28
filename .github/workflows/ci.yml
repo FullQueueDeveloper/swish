@@ -57,7 +57,7 @@ jobs:
       - name: "test: add"
         run: ${{ steps.binary-path.outputs.binary-path }} --add date2
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: spx-init-${{ matrix.swift }}-${{ matrix.os }}
           path: SPX
@@ -82,7 +82,7 @@ jobs:
         run: ${{ steps.binary-path.outputs.binary-path }} appicon
         if: ${{ matrix.os != 'ubuntu-latest' }}
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: spx-ios-${{ matrix.swift }}-${{ matrix.os }}
           path: |
