@@ -37,12 +37,12 @@ jobs:
 
       - name: set binary path
         id: binary-path
-        run: echo "binary-path=$(swift build --show-bin-path -c release)/SPX" >> "$GITHUB_OUTPUT"
+        run: echo "binary-path=$(swift build --show-bin-path -c release)/spx" >> "$GITHUB_OUTPUT"
 
       - name: upload binary
         uses: actions/upload-artifact@v4
         with:
-          name: SPX.${{ matrix.os}}
+          name: spx.${{ matrix.os}}
           path: ${{ steps.binary-path.outputs.binary-path }}
 
       - name: "test: version"
