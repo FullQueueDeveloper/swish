@@ -15,18 +15,17 @@ jobs:
         include:
           - os: macos-13
             swift: "5.9"
+          - os: macos-14
+            swift: "5.9"
+          - os: macos-15
+            swift: "5.9"
           - os: ubuntu-latest
             swift: "5.9"
 
     steps:
-      - uses: swift-actions/setup-swift@v1
+      - uses: SwiftyLab/setup-swift@latest
         with:
           swift-version: ${{ matrix.swift }}
-
-      - uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
-        if: matrix.os != 'ubuntu-latest'
 
       - uses: actions/checkout@v3
 
@@ -36,17 +35,27 @@ jobs:
       - name: build
         run: swift build -c release
 
+      - name: set binary path
+        id: binary-path
+        run: echo "binary-path=$(swift build --show-bin-path -c release)/SPX" >> "$GITHUB_OUTPUT"
+
+      - name: upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: SPX.${{ matrix.os}}
+          path: ${{ steps.binary-path.outputs.binary-path }}
+
       - name: "test: version"
-        run: $(swift build -c release --show-bin-path)/spx --version
+        run: ${{ steps.binary-path.outputs.binary-path }} --version
 
       - name: "test: help"
-        run: $(swift build -c release --show-bin-path)/spx --help
+        run: ${{ steps.binary-path.outputs.binary-path }} --help
 
       - name: "test: init"
-        run: $(swift build -c release --show-bin-path)/spx --init simple
+        run: ${{ steps.binary-path.outputs.binary-path }} --init simple
 
       - name: "test: add"
-        run: $(swift build -c release --show-bin-path)/spx --add date2
+        run: ${{ steps.binary-path.outputs.binary-path }} --add date2
 
       - uses: actions/upload-artifact@v3
         with:
@@ -54,24 +63,24 @@ jobs:
           path: SPX
 
       - name: "test: run"
-        run: $(swift build -c release --show-bin-path)/spx date2
+        run: ${{ steps.binary-path.outputs.binary-path }} date2
 
       - name: "test: build"
-        run: $(swift build -c release --show-bin-path)/spx --build
+        run: ${{ steps.binary-path.outputs.binary-path }} --build
 
       - name: "reset spx dir"
         run: rm -fr SPX
 
       - name: "template ios - scaffold"
-        run: $(swift build -c release --show-bin-path)/spx -i ios
+        run: ${{ steps.binary-path.outputs.binary-path }} -i ios
 
       - name: "template ios - build"
-        run: $(swift build -c release --show-bin-path)/spx --build
-        if: ${{ matrix.os == 'macos-13' }}
+        run: ${{ steps.binary-path.outputs.binary-path }} --build
+        if: ${{ matrix.os != 'ubuntu-latest' }}
 
       - name: "template ios - generate app icon"
-        run: $(swift build -c release --show-bin-path)/spx appicon
-        if: ${{ matrix.os == 'macos-13' }}
+        run: ${{ steps.binary-path.outputs.binary-path }} appicon
+        if: ${{ matrix.os != 'ubuntu-latest' }}
 
       - uses: actions/upload-artifact@v3
         with:
@@ -82,7 +91,7 @@ jobs:
 
       - name: "demo: build container"
         run: cd demos/VaporDemo && $(swift build -c release --package-path ../.. --show-bin-path)/spx docker
-        if: ${{ matrix.os != 'macos-13' }}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
 
       - name: "demo: update and test"
         run: cd demos/VaporDemo && $(swift build -c release --package-path ../.. --show-bin-path)/spx UpdateAndTest
